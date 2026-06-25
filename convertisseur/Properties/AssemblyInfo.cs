@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("convertisseur")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("convertisseur")]
-[assembly: AssemblyCopyright("Copyright ©  2026")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTitle("Calculatrice Magique – 3 Chiffres")]
+[assembly: AssemblyDescription("Calculatrice scientifique avec conversions, nombres complexes et affichage en 3 chiffres significatifs.")]
+[assembly: AssemblyConfiguration("Release")]
+[assembly: AssemblyCompany("Gira Software")]
+[assembly: AssemblyProduct("Calculatrice Magique 3 Chiffres")]
+[assembly: AssemblyCopyright("Copyright © Giragame 2026")]
+[assembly: AssemblyTrademark("Gira Tools")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
