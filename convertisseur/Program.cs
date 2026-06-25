@@ -57,7 +57,6 @@ namespace CalculatriceScientifique
                     continue;
                 }
 
-                // NOUVEAU : Interception du mode équation
                 if (saisieMinuscule == "equation" || saisieMinuscule == "équations" || saisieMinuscule == "equations")
                 {
                     ModeEquation(cultureFr);
@@ -116,7 +115,7 @@ namespace CalculatriceScientifique
         }
 
         // ====================================================================
-        //                 MOTEUR DE RÉSOLUTION D'ÉQUATIONS 
+        // MOTEUR DE RÉSOLUTION D'ÉQUATIONS
         // ====================================================================
         static void ModeEquation(CultureInfo culture)
         {
@@ -152,7 +151,6 @@ namespace CalculatriceScientifique
 
                 try
                 {
-                    // Nettoyage et séparation par espaces
                     string[] strParts = saisie.Replace('.', ',').Split(new char[] { ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
                     double[] val = new double[strParts.Length];
 
@@ -164,7 +162,7 @@ namespace CalculatriceScientifique
                     Console.WriteLine("\n --- DÉTAIL DU CALCUL ---");
                     Console.ForegroundColor = ConsoleColor.DarkYellow;
 
-                    if (val.Length == 2) // 1ER DEGRÉ
+                    if (val.Length == 2)
                     {
                         double a = val[0], b = val[1];
                         Console.WriteLine($" Équation : {a}x + ({b}) = 0");
@@ -178,7 +176,7 @@ namespace CalculatriceScientifique
                             Console.WriteLine($"\n Résultat : x = {FormaterNombre(x, culture)}");
                         }
                     }
-                    else if (val.Length == 3) // 2ND DEGRÉ
+                    else if (val.Length == 3)
                     {
                         double a = val[0], b = val[1], c = val[2];
                         Console.WriteLine($" Équation : {a}x² + ({b})x + ({c}) = 0");
@@ -203,13 +201,13 @@ namespace CalculatriceScientifique
                                 Console.WriteLine($"\n x1 = {FormaterNombre(x1, culture)}");
                                 Console.WriteLine($" x2 = {FormaterNombre(x2, culture)}");
                             }
-                            else if (Math.Abs(delta) < 1e-10) // delta = 0
+                            else if (Math.Abs(delta) < 1e-10)
                             {
                                 Console.WriteLine("\n Δ = 0 : Une racine double.");
                                 double x0 = -b / (2 * a);
                                 Console.WriteLine($"\n x0 = {FormaterNombre(x0, culture)}");
                             }
-                            else // Complexes
+                            else
                             {
                                 Console.WriteLine("\n Δ < 0 : Deux racines complexes.");
                                 double rDelta = Math.Sqrt(-delta);
@@ -225,7 +223,7 @@ namespace CalculatriceScientifique
                             }
                         }
                     }
-                    else if (val.Length == 6) // SYSTÈME DEUX INCONNUES
+                    else if (val.Length == 6)
                     {
                         double a = val[0], b = val[1], c = val[2];
                         double d = val[3], e = val[4], f = val[5];
@@ -346,7 +344,7 @@ namespace CalculatriceScientifique
  |  | |__| (_| | | (_|_____/ ___ \  |  __/|  _ <| |_| | |
  |   \____\__,_|_|\___|   /_/   \_\ |_|   |_| \_\\___/  |
  |                                                      |
- |    CALCULATRICE SCIENTIFIQUE et NOMBRES COMPLEXES     |
+ |    CALCULATRICE SCIENTIFIQUE & NOMBRES COMPLEXES     |
   ======================================================
 ");
 
@@ -436,7 +434,12 @@ namespace CalculatriceScientifique
 
         public MathParser(string expression)
         {
+            // On nettoie les espaces, gère les virgules, et remplace les exposants
             str = expression.ToLower().Replace(" ", "").Replace(',', '.').Replace("²", "^2").Replace("³", "^3");
+
+            // CORRECTION IMPORTANTE ICI : Multiplication implicite
+            // Remplace un Chiffre suivi d'une Lettre par Chiffre*Lettre (ex: 47i -> 47*i, 2pi -> 2*pi)
+            str = Regex.Replace(str, @"([0-9])([a-z])", "$1*$2");
         }
 
         private void NextChar()
