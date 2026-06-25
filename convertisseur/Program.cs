@@ -116,7 +116,7 @@ namespace CalculatriceScientifique
         }
 
         // ====================================================================
-        // NOUVEAU : MOTEUR DE RÉSOLUTION D'ÉQUATIONS (INTELLIGENT)
+        //                 MOTEUR DE RÉSOLUTION D'ÉQUATIONS 
         // ====================================================================
         static void ModeEquation(CultureInfo culture)
         {
@@ -346,7 +346,7 @@ namespace CalculatriceScientifique
  |  | |__| (_| | | (_|_____/ ___ \  |  __/|  _ <| |_| | |
  |   \____\__,_|_|\___|   /_/   \_\ |_|   |_| \_\\___/  |
  |                                                      |
- |    CALCULATRICE SCIENTIFIQUE & NOMBRES COMPLEXES     |
+ |    CALCULATRICE SCIENTIFIQUE et NOMBRES COMPLEXES     |
   ======================================================
 ");
 
