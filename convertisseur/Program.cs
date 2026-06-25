@@ -434,11 +434,10 @@ namespace CalculatriceScientifique
 
         public MathParser(string expression)
         {
-            // On nettoie les espaces, gère les virgules, et remplace les exposants
+
             str = expression.ToLower().Replace(" ", "").Replace(',', '.').Replace("²", "^2").Replace("³", "^3");
 
-            // CORRECTION IMPORTANTE ICI : Multiplication implicite
-            // Remplace un Chiffre suivi d'une Lettre par Chiffre*Lettre (ex: 47i -> 47*i, 2pi -> 2*pi)
+
             str = Regex.Replace(str, @"([0-9])([a-z])", "$1*$2");
         }
 
