@@ -26,7 +26,7 @@ C#
 
 .NET Framework / Visual Studio 2019
 
-Windows Forms (WinForms)
+console app
 
 Solution Visual Studio : convertisseur.sln
 
