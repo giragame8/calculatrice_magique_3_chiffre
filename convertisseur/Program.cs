@@ -115,7 +115,7 @@ namespace CalculatriceScientifique
         }
 
         // ====================================================================
-        // MOTEUR DE RÉSOLUTION D'ÉQUATIONS
+        // MOTEUR DE RÉSOLUTION D'ÉQUATIONS (INTELLIGENCE ALGEBRIQUE)
         // ====================================================================
         static void ModeEquation(CultureInfo culture)
         {
@@ -125,25 +125,27 @@ namespace CalculatriceScientifique
                 Console.Clear();
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("======================================================");
-                Console.WriteLine("                MODE ÉQUATION RAPIDE                  ");
+                Console.WriteLine("             MODE ÉQUATION INTELLIGENT                ");
                 Console.WriteLine("======================================================\n");
                 Console.ResetColor();
 
-                Console.WriteLine(" Pas de menu ! Tapez juste les nombres séparés par un espace :\n");
+                Console.WriteLine(" Tapez votre équation naturellement ! Le programme s'occupe de tout.\n");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(" [1er Degré]    ax + b = 0            -> Tapez : a b");
-                Console.WriteLine(" [2nd Degré]    ax² + bx + c = 0      -> Tapez : a b c");
-                Console.WriteLine(" [Système]      ax+by=c et dx+ey=f    -> Tapez : a b c d e f");
-                Console.WriteLine("\n Exemple 2nd degré : 1 -5 6 (pour x² - 5x + 6 = 0)");
+                Console.WriteLine(" [Exemples]   3*x + 5 = 14");
+                Console.WriteLine("              x^2 - 5*x = -6");
+                Console.WriteLine("              60 + x * e(-2.5) = 0");
+                Console.WriteLine("\n (Astuce : Les espaces pour les systèmes marchent toujours)");
                 Console.ResetColor();
 
-                Console.Write("\n Coefficients (ou 'retour') : ");
+                Console.Write("\n Équation (ou 'retour') : ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 string saisie = Console.ReadLine();
                 Console.ResetColor();
 
                 if (string.IsNullOrWhiteSpace(saisie)) continue;
-                if (saisie.ToLower().Trim() == "retour" || saisie.ToLower().Trim() == "quitter")
+                string saisieMin = saisie.ToLower().Trim();
+
+                if (saisieMin == "retour" || saisieMin == "quitter")
                 {
                     modeActif = false;
                     continue;
@@ -151,118 +153,159 @@ namespace CalculatriceScientifique
 
                 try
                 {
-                    string[] strParts = saisie.Replace('.', ',').Split(new char[] { ' ', ';' }, StringSplitOptions.RemoveEmptyEntries);
-                    double[] val = new double[strParts.Length];
-
-                    for (int i = 0; i < strParts.Length; i++)
+                    // Si la phrase contient 'x' ou '=', on déclenche l'IA algébrique
+                    if (saisieMin.Contains("x") || saisieMin.Contains("="))
                     {
-                        val[i] = double.Parse(strParts[i], culture);
-                    }
-
-                    Console.WriteLine("\n --- DÉTAIL DU CALCUL ---");
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
-
-                    if (val.Length == 2)
-                    {
-                        double a = val[0], b = val[1];
-                        Console.WriteLine($" Équation : {a}x + ({b}) = 0");
-
-                        if (a == 0) Console.WriteLine(b == 0 ? " Infinité de solutions." : " Impossible.");
-                        else
+                        string expression = saisieMin;
+                        if (expression.Contains("="))
                         {
-                            Console.WriteLine($" -> {a}x = {-b}");
-                            double x = -b / a;
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"\n Résultat : x = {FormaterNombre(x, culture)}");
+                            string[] parts = expression.Split('=');
+                            // On déplace tout du même côté (Gauche - Droite = 0)
+                            expression = $"({parts[0]}) - ({parts[1]})";
                         }
-                    }
-                    else if (val.Length == 3)
-                    {
-                        double a = val[0], b = val[1], c = val[2];
-                        Console.WriteLine($" Équation : {a}x² + ({b})x + ({c}) = 0");
 
-                        if (a == 0) Console.WriteLine(" Erreur : 'a' est nul, ce n'est pas du 2nd degré.");
+                        // Algorithme d'interpolation polynomiale pour deviner a, b, c
+                        MathParser p0 = new MathParser(expression); p0.XValue = 0; Complex y0 = p0.Parse();
+                        MathParser p1 = new MathParser(expression); p1.XValue = 1; Complex y1 = p1.Parse();
+                        MathParser p_1 = new MathParser(expression); p_1.XValue = -1; Complex y_1 = p_1.Parse();
+                        MathParser p2 = new MathParser(expression); p2.XValue = 2; Complex y2 = p2.Parse();
+
+                        Complex a = (y1 + y_1 - 2.0 * y0) / 2.0;
+                        Complex b = (y1 - y_1) / 2.0;
+                        Complex c = y0;
+
+                        // Vérification mathématique pour être sûr que c'est bien une équation de degré max 2
+                        Complex check = a * 4.0 + b * 2.0 + c;
+
+                        Console.WriteLine("\n --- DÉTAIL DU CALCUL ---");
+
+                        if (Complex.Abs(check - y2) > 1e-5)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(" Erreur : L'équation est trop complexe (ex: x à la puissance 3, ou sin(x)).");
+                            Console.WriteLine(" Je ne peux résoudre que des polynômes du 1er ou 2nd degré.");
+                        }
                         else
                         {
-                            double delta = (b * b) - (4 * a * c);
-                            Console.WriteLine($" -> Calcul de Delta (Δ) = b² - 4ac");
-                            Console.WriteLine($" -> Δ = ({b})² - 4*({a})*({c}) = {FormaterNombre(delta, culture)}");
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                            if (Complex.Abs(a) < 1e-10)
+                            {
+                                // 1er Degré
+                                double coefA = b.Real, coefB = c.Real;
+                                Console.WriteLine($" Équation déduite : {FormaterNombre(coefA, culture)}x + ({FormaterNombre(coefB, culture)}) = 0");
 
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            if (delta > 0)
-                            {
-                                Console.WriteLine("\n Δ > 0 : Deux racines réelles.");
-                                double rDelta = Math.Sqrt(delta);
-                                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                                Console.WriteLine($" -> √Δ = {FormaterNombre(rDelta, culture)}");
-                                double x1 = (-b - rDelta) / (2 * a);
-                                double x2 = (-b + rDelta) / (2 * a);
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine($"\n x1 = {FormaterNombre(x1, culture)}");
-                                Console.WriteLine($" x2 = {FormaterNombre(x2, culture)}");
-                            }
-                            else if (Math.Abs(delta) < 1e-10)
-                            {
-                                Console.WriteLine("\n Δ = 0 : Une racine double.");
-                                double x0 = -b / (2 * a);
-                                Console.WriteLine($"\n x0 = {FormaterNombre(x0, culture)}");
+                                if (Math.Abs(coefA) < 1e-10) Console.WriteLine(Math.Abs(coefB) < 1e-10 ? " Infinité de solutions." : " Impossible.");
+                                else
+                                {
+                                    Console.WriteLine($" -> {FormaterNombre(coefA, culture)}x = {FormaterNombre(-coefB, culture)}");
+                                    double xRes = -coefB / coefA;
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine($"\n Résultat : x = {FormaterNombre(xRes, culture)}");
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("\n Δ < 0 : Deux racines complexes.");
-                                double rDelta = Math.Sqrt(-delta);
-                                double reel = -b / (2 * a);
-                                double imag = Math.Abs(rDelta / (2 * a));
+                                // 2nd Degré
+                                double coefA = a.Real, coefB = b.Real, coefC = c.Real;
+                                Console.WriteLine($" Équation déduite : {FormaterNombre(coefA, culture)}x² + ({FormaterNombre(coefB, culture)})x + ({FormaterNombre(coefC, culture)}) = 0");
 
-                                string strReel = FormaterNombre(reel, culture);
-                                string strImag = FormaterNombre(imag, culture);
-                                if (Math.Abs(reel) < 1e-10) strReel = "0";
+                                double delta = (coefB * coefB) - (4 * coefA * coefC);
+                                Console.WriteLine($" -> Calcul de Delta (Δ) = b² - 4ac");
+                                Console.WriteLine($" -> Δ = ({FormaterNombre(coefB, culture)})² - 4*({FormaterNombre(coefA, culture)})*({FormaterNombre(coefC, culture)}) = {FormaterNombre(delta, culture)}");
 
-                                Console.WriteLine($"\n x1 = {strReel} - {strImag}i");
-                                Console.WriteLine($" x2 = {strReel} + {strImag}i");
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                if (delta > 0)
+                                {
+                                    Console.WriteLine("\n Δ > 0 : Deux racines réelles.");
+                                    double rDelta = Math.Sqrt(delta);
+                                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                    Console.WriteLine($" -> √Δ = {FormaterNombre(rDelta, culture)}");
+                                    double x1 = (-coefB - rDelta) / (2 * coefA);
+                                    double x2 = (-coefB + rDelta) / (2 * coefA);
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine($"\n x1 = {FormaterNombre(x1, culture)}");
+                                    Console.WriteLine($" x2 = {FormaterNombre(x2, culture)}");
+                                }
+                                else if (Math.Abs(delta) < 1e-10)
+                                {
+                                    Console.WriteLine("\n Δ = 0 : Une racine double.");
+                                    double x0 = -coefB / (2 * coefA);
+                                    Console.WriteLine($"\n x0 = {FormaterNombre(x0, culture)}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("\n Δ < 0 : Deux racines complexes.");
+                                    double rDelta = Math.Sqrt(-delta);
+                                    double reel = -coefB / (2 * coefA);
+                                    double imag = Math.Abs(rDelta / (2 * coefA));
+
+                                    string strReel = FormaterNombre(reel, culture);
+                                    string strImag = FormaterNombre(imag, culture);
+                                    if (Math.Abs(reel) < 1e-10) strReel = "0";
+
+                                    Console.WriteLine($"\n x1 = {strReel} - {strImag}i");
+                                    Console.WriteLine($" x2 = {strReel} + {strImag}i");
+                                }
                             }
-                        }
-                    }
-                    else if (val.Length == 6)
-                    {
-                        double a = val[0], b = val[1], c = val[2];
-                        double d = val[3], e = val[4], f = val[5];
-
-                        Console.WriteLine($" Système :");
-                        Console.WriteLine($"  (1)  {a}x + ({b})y = {c}");
-                        Console.WriteLine($"  (2)  {d}x + ({e})y = {f}\n");
-
-                        Console.WriteLine($" -> Méthode de Cramer (Déterminants)");
-                        double detPrincipal = (a * e) - (b * d);
-                        Console.WriteLine($" -> D  = (a*e - b*d) = {FormaterNombre(detPrincipal, culture)}");
-
-                        if (Math.Abs(detPrincipal) < 1e-10)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("\n Le déterminant est nul (Droites parallèles ou confondues, pas de solution unique).");
-                        }
-                        else
-                        {
-                            double dx = (c * e) - (b * f);
-                            double dy = (a * f) - (c * d);
-                            Console.WriteLine($" -> Dx = (c*e - b*f) = {FormaterNombre(dx, culture)}");
-                            Console.WriteLine($" -> Dy = (a*f - c*d) = {FormaterNombre(dy, culture)}");
-
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"\n x = Dx / D = {FormaterNombre(dx / detPrincipal, culture)}");
-                            Console.WriteLine($" y = Dy / D = {FormaterNombre(dy / detPrincipal, culture)}");
                         }
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(" Nombre de coefficients invalide ! Tapez 2, 3 ou 6 nombres.");
+                        // ANCIEN MODE DE SAISIE PAR ESPACES (Pour les systèmes par ex.)
+                        string[] strParts = saisie.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        double[] val = new double[strParts.Length];
+
+                        for (int i = 0; i < strParts.Length; i++)
+                        {
+                            MathParser parser = new MathParser(strParts[i]);
+                            Complex comp = parser.Parse();
+                            val[i] = comp.Real;
+                        }
+
+                        Console.WriteLine("\n --- DÉTAIL DU CALCUL ---");
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+
+                        if (val.Length == 6)
+                        {
+                            double a = val[0], b = val[1], c = val[2];
+                            double d = val[3], e = val[4], f = val[5];
+
+                            Console.WriteLine($" Système reconnu :");
+                            Console.WriteLine($"  (1)  {FormaterNombre(a, culture)}x + ({FormaterNombre(b, culture)})y = {FormaterNombre(c, culture)}");
+                            Console.WriteLine($"  (2)  {FormaterNombre(d, culture)}x + ({FormaterNombre(e, culture)})y = {FormaterNombre(f, culture)}\n");
+
+                            Console.WriteLine($" -> Méthode de Cramer (Déterminants)");
+                            double detPrincipal = (a * e) - (b * d);
+                            Console.WriteLine($" -> D  = (a*e - b*d) = {FormaterNombre(detPrincipal, culture)}");
+
+                            if (Math.Abs(detPrincipal) < 1e-10)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("\n Le déterminant est nul (Droites parallèles ou confondues, pas de solution unique).");
+                            }
+                            else
+                            {
+                                double dx = (c * e) - (b * f);
+                                double dy = (a * f) - (c * d);
+                                Console.WriteLine($" -> Dx = (c*e - b*f) = {FormaterNombre(dx, culture)}");
+                                Console.WriteLine($" -> Dy = (a*f - c*d) = {FormaterNombre(dy, culture)}");
+
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine($"\n x = Dx / D = {FormaterNombre(dx / detPrincipal, culture)}");
+                                Console.WriteLine($" y = Dy / D = {FormaterNombre(dy / detPrincipal, culture)}");
+                            }
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(" Nombre de paramètres invalide ! Si vous ne mettez pas de 'x', il faut 6 coefficients pour un système.");
+                        }
                     }
                 }
                 catch (Exception)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("\n Erreur de syntaxe. Assurez-vous de n'entrer que des nombres.");
+                    Console.WriteLine("\n Erreur de syntaxe de l'équation.");
                 }
 
                 Console.ResetColor();
@@ -430,15 +473,21 @@ namespace CalculatriceScientifique
         private int ch;
         private string str;
 
+        // NOUVEAU : Propriété pour remplacer le x par une valeur de test
+        public Complex XValue { get; set; } = 0;
+
         public string ExpressionNettoyee { get { return str; } }
 
         public MathParser(string expression)
         {
-
             str = expression.ToLower().Replace(" ", "").Replace(',', '.').Replace("²", "^2").Replace("³", "^3");
 
-
+            // Multiplication implicite classique (ex: 47i -> 47*i, 2pi -> 2*pi)
             str = Regex.Replace(str, @"([0-9])([a-z])", "$1*$2");
+
+            // Multiplication implicite pour le x (ex: xsin -> x*sin, xe -> x*e)
+            str = str.Replace("xe", "x*e").Replace("xsin", "x*sin").Replace("xcos", "x*cos").Replace("xtan", "x*tan")
+                     .Replace("xlog", "x*log").Replace("xsqr", "x*sqr").Replace("xpi", "x*pi");
         }
 
         private void NextChar()
@@ -520,15 +569,32 @@ namespace CalculatriceScientifique
 
                 if (func == "i") return Complex.ImaginaryOne;
                 if (func == "pi") return Math.PI;
-                if (func == "e") return Math.E;
 
-                Complex x = ParsePrimary();
-                if (func == "sqrt") return Complex.Sqrt(x);
-                if (func == "sin") return Complex.Sin(x);
-                if (func == "cos") return Complex.Cos(x);
-                if (func == "tan") return Complex.Tan(x);
-                if (func == "log") return Complex.Log(x);
-                if (func == "exp") return Complex.Exp(x);
+                // Le fameux 'x' est lu ici
+                if (func == "x") return XValue;
+
+                // Si tu tapes e(-2.5) au lieu de exp(-2.5), le programme le devine ici
+                if (func == "e")
+                {
+                    int tempPos = pos;
+                    while (tempPos < str.Length && str[tempPos] == ' ') tempPos++;
+                    if (tempPos < str.Length && str[tempPos] == '(')
+                    {
+                        func = "exp";
+                    }
+                    else
+                    {
+                        return Math.E;
+                    }
+                }
+
+                Complex arg = ParsePrimary();
+                if (func == "sqrt") return Complex.Sqrt(arg);
+                if (func == "sin") return Complex.Sin(arg);
+                if (func == "cos") return Complex.Cos(arg);
+                if (func == "tan") return Complex.Tan(arg);
+                if (func == "log") return Complex.Log(arg);
+                if (func == "exp") return Complex.Exp(arg);
 
                 throw new ParseException("Fonction inconnue : '" + func + "'", startPos, str);
             }
